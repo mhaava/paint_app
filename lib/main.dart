@@ -36,21 +36,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
+  List<Offset> points = <Offset>[];
   @override
   Widget build(BuildContext context) {
+    final Container sketchArea = Container(
+      margin: EdgeInsets.all(4.0),
+      alignment: Alignment.topLeft,
+      color: Colors.blueGrey[50],
+      child: CustomPaint(
+        painter: Sketcher(points),
+      ),
+
+    );
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -61,43 +58,57 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('Sketcher'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
+      body: GestureDetector(
+        onPanUpdate: (DragUpdateDetails details) {
+          setState(() {
+            RenderBox box = context.findRenderObject();
+            Offset point = box.globalToLocal(details.globalPosition);
+            point = point.translate(0.0, -(AppBar().preferredSize.height));
+
+            points = List.from(points)..add(point);
+          });
+        },
+        onPanEnd: (DragEndDetails details) {
+          points.add(null);
+        },
+        child: sketchArea,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        tooltip: 'clear Screen',
+        backgroundColor: Colors.red,
+        child: Icon(Icons.refresh),
+        onPressed: () {
+          setState(() => points.clear());
+        },
+      ),
     );
   }
+}
+
+class Sketcher extends CustomPainter {
+  final List<Offset> points;
+
+  Sketcher(this.points);
+
+  @override
+  bool shouldRepaint(Sketcher oldDelegate) {
+    return oldDelegate.points != points;
+  }
+
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = Colors.black
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 4.0;
+
+    for (int i=0; i < points.length - 1; i++) {
+      if (points[i] != null && points[i + 1] != null) {
+        canvas.drawLine(points[i], points[i + 1], paint);
+      }
+
+    }
+  }
+
 }
