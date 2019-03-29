@@ -25,12 +25,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Color lineColor = Colors.black;
-  Choice _selectedChoice = choices[0];
 
   void _select(Choice choice) {
     setState(() {
-      _selectedChoice = choice;
       switch (choice.title) {
+        case "white":
+          lineColor = Colors.blueGrey[50];
+        break;
         case "black":
           lineColor = Colors.black;
         break;
@@ -41,12 +42,19 @@ class _MyHomePageState extends State<MyHomePage> {
           lineColor = Colors.red;
         break;
         case "green":
-          lineColor = Colors.black;
+          lineColor = Colors.green;
         break;
+        case "orange":
+          lineColor = Colors.orange;
+        break;
+        case "pink":
+          lineColor = Colors.pink;
+          break;
       }
     });
   }
   List<Offset> points = <Offset>[];
+  List<Color> colors = <Color>[];
   @override
   Widget build(BuildContext context) {
     final Container sketchArea = Container(
@@ -54,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
       alignment: Alignment.topLeft,
       color: Colors.blueGrey[50],
       child: CustomPaint(
-        painter: Sketcher(lineColor, points),
+        painter: Sketcher(points, colors),
       ),
 
     );
@@ -62,20 +70,19 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text('Sketcher'),
           actions: <Widget>[
-            // action button
-            IconButton(
-              icon: Icon(choices[0].icon),
-              onPressed: () {
-                _select(choices[0]);
-                lineColor = Colors.blue;
-              },
+            new IconButton(
+                icon: new Icon(Icons.power_input),
+                tooltip: 'Undo',
+                onPressed: () {
+                  _select(choices[0]);
+                },
             ),
-
             // overflow menu
             PopupMenuButton<Choice>(
+              icon: new Icon(Icons.palette),
               onSelected: _select,
               itemBuilder: (BuildContext context) {
-                return choices.skip(0).map((Choice choice) {
+                return choices.skip(1).map((Choice choice) {
                   return PopupMenuItem<Choice>(
                     value: choice,
                     child: Text(choice.title),
@@ -93,6 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
             point = point.translate(0.0, -(AppBar().preferredSize.height));
 
             points = List.from(points)..add(point);
+            colors = List.from(colors)..add(lineColor);
           });
         },
         onPanEnd: (DragEndDetails details) {
@@ -120,31 +128,33 @@ class Choice {
 }
 
 const List<Choice> choices = const <Choice>[
-  const Choice(title: 'black', icon: Icons.border_color),
-  const Choice(title: 'blue', icon: Icons.directions_bike),
-  const Choice(title: 'red', icon: Icons.directions_boat),
-  const Choice(title: 'green', icon: Icons.directions_bus),
+  const Choice(title: 'white'),
+  const Choice(title: 'black'),
+  const Choice(title: 'blue'),
+  const Choice(title: 'red'),
+  const Choice(title: 'green'),
+  const Choice(title: 'orange'),
+  const Choice(title: 'pink'),
 ];
 
 class Sketcher extends CustomPainter {
-  final lineColor;
   final List<Offset> points;
-  Sketcher(this.lineColor, this.points);
+  final List<Color> colors;
+  Sketcher(this.points, this.colors);
   @override
   bool shouldRepaint(Sketcher oldDelegate) {
     return oldDelegate.points != points;
   }
     void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = lineColor
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 4.0;
 
     for (int i=0; i < points.length - 1; i++) {
       if (points[i] != null && points[i + 1] != null) {
+        Paint paint = Paint()
+          ..color = colors[i]
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 4.0;
         canvas.drawLine(points[i], points[i + 1], paint);
       }
-
     }
 
   }
