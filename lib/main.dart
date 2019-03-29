@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
-
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
@@ -20,15 +17,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -36,6 +24,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Color lineColor = Colors.black;
+  Choice _selectedChoice = choices[0];
+
+  void _select(Choice choice) {
+    setState(() {
+      _selectedChoice = choice;
+      switch (choice.title) {
+        case "black":
+          lineColor = Colors.black;
+        break;
+        case "blue":
+          lineColor = Colors.blue;
+        break;
+        case "red":
+          lineColor = Colors.red;
+        break;
+        case "green":
+          lineColor = Colors.black;
+        break;
+      }
+    });
+  }
   List<Offset> points = <Offset>[];
   @override
   Widget build(BuildContext context) {
@@ -44,21 +54,36 @@ class _MyHomePageState extends State<MyHomePage> {
       alignment: Alignment.topLeft,
       color: Colors.blueGrey[50],
       child: CustomPaint(
-        painter: Sketcher(points),
+        painter: Sketcher(lineColor, points),
       ),
 
     );
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text('Sketcher'),
+          actions: <Widget>[
+            // action button
+            IconButton(
+              icon: Icon(choices[0].icon),
+              onPressed: () {
+                _select(choices[0]);
+                lineColor = Colors.blue;
+              },
+            ),
+
+            // overflow menu
+            PopupMenuButton<Choice>(
+              onSelected: _select,
+              itemBuilder: (BuildContext context) {
+                return choices.skip(0).map((Choice choice) {
+                  return PopupMenuItem<Choice>(
+                    value: choice,
+                    child: Text(choice.title),
+                  );
+                }).toList();
+              },
+            ),
+          ],
       ),
       body: GestureDetector(
         onPanUpdate: (DragUpdateDetails details) {
@@ -76,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: sketchArea,
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'clear Screen',
+        tooltip: 'clear screen',
         backgroundColor: Colors.red,
         child: Icon(Icons.refresh),
         onPressed: () {
@@ -87,19 +112,31 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+class Choice {
+  const Choice({this.title, this.icon});
+
+  final String title;
+  final IconData icon;
+}
+
+const List<Choice> choices = const <Choice>[
+  const Choice(title: 'black', icon: Icons.border_color),
+  const Choice(title: 'blue', icon: Icons.directions_bike),
+  const Choice(title: 'red', icon: Icons.directions_boat),
+  const Choice(title: 'green', icon: Icons.directions_bus),
+];
+
 class Sketcher extends CustomPainter {
+  final lineColor;
   final List<Offset> points;
-
-  Sketcher(this.points);
-
+  Sketcher(this.lineColor, this.points);
   @override
   bool shouldRepaint(Sketcher oldDelegate) {
     return oldDelegate.points != points;
   }
-
-  void paint(Canvas canvas, Size size) {
+    void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
-      ..color = Colors.black
+      ..color = lineColor
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 4.0;
 
@@ -109,6 +146,7 @@ class Sketcher extends CustomPainter {
       }
 
     }
+
   }
 
 }
